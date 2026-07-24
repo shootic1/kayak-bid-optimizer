@@ -1,0 +1,21 @@
+# Applies to builds using the repository root as context (the frontend image).
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+.git
+.github
+docs
+scripts
+backend
+storage/uploads/*
+storage/exports/*
+storage/reports/*
+storage/logs/*
+**/*.log
+.env
+.env.*
+!.env.example

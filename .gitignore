@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------------------
+# KAYAK Bid Optimizer Pro — root .gitignore
+# ---------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Next.js / frontend build output
+.next/
+out/
+frontend/.next/
+frontend/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Local editor/agent settings
+.claude/settings.local.json
+
+# Build artifacts
+dist/
+build/
+
+# Environment files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Runtime storage (keep directory structure, ignore contents)
+storage/uploads/*
+storage/exports/*
+storage/reports/*
+storage/logs/*
+!storage/**/.gitkeep
+
+# Editor / OS
+.DS_Store
+.idea/
+*.swp
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Docker
+*.pid

@@ -1,0 +1,22 @@
+{
+  "name": "kayak-bid-optimizer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KAYAK Bid Optimizer Pro — internal OTA bid optimization tool (Phase 1 foundation).",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "frontend": "pnpm --filter @kayak/frontend dev",
+    "frontend:build": "pnpm --filter @kayak/frontend build",
+    "frontend:lint": "pnpm --filter @kayak/frontend lint",
+    "frontend:typecheck": "pnpm --filter @kayak/frontend typecheck",
+    "shared:build": "pnpm --filter @kayak/shared build",
+    "shared:typecheck": "pnpm --filter @kayak/shared typecheck",
+    "build": "pnpm --filter @kayak/shared build && pnpm --filter @kayak/frontend build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

@@ -1,0 +1,9 @@
+packages:
+  - shared
+  - frontend
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@radix-ui/react-slot@1.3.2'
+  - postcss@8.5.23

@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '26'
+  PNPM_VERSION: '11.17.0'
+  PYTHON_VERSION: '3.13'
+  UV_VERSION: '0.11.32'
+
+jobs:
+  shared:
+    name: Shared package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Type-check @kayak/shared
+        run: pnpm --filter @kayak/shared typecheck
+      - name: Build @kayak/shared
+        run: pnpm --filter @kayak/shared build
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter @kayak/frontend lint
+      - name: Format check
+        run: pnpm --filter @kayak/frontend format:check
+      - name: Type-check
+        run: pnpm --filter @kayak/frontend typecheck
+      - name: Build
+        run: pnpm --filter @kayak/frontend build
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kayak
+          POSTGRES_PASSWORD: kayak
+          POSTGRES_DB: kayak_bid_optimizer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kayak -d kayak_bid_optimizer"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://kayak:kayak@localhost:5432/kayak_bid_optimizer
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+      - name: Sync (frozen)
+        run: uv sync --frozen --python ${{ env.PYTHON_VERSION }}
+      - name: Lint (ruff)
+        run: uv run ruff check app tests
+      - name: Format check (ruff)
+        run: uv run ruff format --check app tests
+      - name: Type-check (mypy)
+        run: uv run mypy app
+      - name: Test (pytest)
+        run: uv run pytest
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t kayak-backend:ci ./backend
+      - name: Build frontend image
+        run: docker build -t kayak-frontend:ci -f frontend/Dockerfile .

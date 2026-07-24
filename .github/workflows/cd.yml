@@ -1,0 +1,38 @@
+# ---------------------------------------------------------------------------
+# RESERVED — Continuous Deployment (DISABLED in Phase 1).
+#
+# Deployment in this project is delivered by the platforms' native Git
+# integrations (Vercel for the frontend, Railway/Render for the backend), so no
+# cloud credentials live in GitHub Actions. This workflow documents an
+# alternative Actions-driven pipeline and is intentionally not enabled.
+#
+# To activate in a future phase: change the trigger below from
+# `workflow_dispatch`-only to the desired branch/tag events, add the required
+# secrets, and fill in the deploy steps.
+# ---------------------------------------------------------------------------
+
+name: CD (reserved – disabled)
+
+on:
+  workflow_dispatch: {} # manual-only; no automatic triggers in Phase 1
+
+jobs:
+  guard:
+    name: Reserved — no-op
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain
+        run: |
+          echo "CD is reserved and disabled in Phase 1."
+          echo "Frontend deploys via Vercel Git integration; backend via Railway/Render."
+          exit 0
+  # --- Designed pipeline (do not enable in Phase 1) -------------------------
+  # build-and-push:
+  #   - build backend + frontend images, tag by git SHA + semver, push to registry
+  # deploy-staging:
+  #   - environment: staging (auto on merge to main)
+  #   - run alembic migrations as a gated pre-deploy step
+  #   - smoke test /api/health + /api/v1/version
+  # deploy-production:
+  #   - environment: production (manual approval)
+  #   - migrate → deploy → smoke test → (rollback to previous image tag on failure)

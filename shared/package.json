@@ -1,0 +1,24 @@
+{
+  "name": "@kayak/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cross-cutting types, constants, and validation shared across the KAYAK frontend.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./constants": "./src/constants/index.ts",
+    "./types": "./src/types/index.ts",
+    "./validation": "./src/validation/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}
