@@ -16,14 +16,16 @@ FROM base AS builder
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
-# Install dependencies first (cached layer) without the project for fast rebuilds.
+# Install dependencies first (layer cached on the lockfile) without the project.
+# No BuildKit cache mounts: uses only portable Docker features so the image
+# builds on Railway/Render's builder as well as locally. UV_NO_CACHE keeps the
+# image lean since a persistent uv cache is not available without a cache mount.
+ENV UV_NO_CACHE=1
 COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+RUN uv sync --frozen --no-install-project --no-dev
 # Then install the project itself.
 COPY . .
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev
 
 # ---- Runner: minimal runtime as a non-root user ---------------------------
 FROM base AS runner
