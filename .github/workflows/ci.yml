@@ -102,7 +102,8 @@ jobs:
     needs: [frontend, backend]
     steps:
       - uses: actions/checkout@v4
+      # Both images build from the monorepo ROOT context (matches Railway/Vercel).
       - name: Build backend image
-        run: docker build -t kayak-backend:ci ./backend
+        run: docker build -t kayak-backend:ci -f backend/Dockerfile .
       - name: Build frontend image
         run: docker build -t kayak-frontend:ci -f frontend/Dockerfile .
