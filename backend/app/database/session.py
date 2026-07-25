@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.database.url import normalize_async_database_url
 
 logger = get_logger("app.database")
 
@@ -33,7 +34,7 @@ def get_engine() -> AsyncEngine:
     if _engine is None:
         logger.info("database_engine_create", pool_size=settings.DB_POOL_SIZE)
         _engine = create_async_engine(
-            settings.DATABASE_URL,
+            normalize_async_database_url(settings.DATABASE_URL),
             echo=settings.DB_ECHO,
             pool_size=settings.DB_POOL_SIZE,
             max_overflow=settings.DB_MAX_OVERFLOW,
