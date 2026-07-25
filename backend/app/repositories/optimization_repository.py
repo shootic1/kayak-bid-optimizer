@@ -66,6 +66,15 @@ class BidRecommendationRepository(BaseRepository):
         )
         return {(origin, destination): int(count) for origin, destination, count in result.all()}
 
+    async def list_for_run(self, run_id: int) -> list[BidRecommendation]:
+        """All recommendations for a run, ordered deterministically (for export)."""
+        result = await self.session.execute(
+            select(BidRecommendation)
+            .where(BidRecommendation.optimization_run_id == run_id)
+            .order_by(BidRecommendation.id)
+        )
+        return list(result.scalars().all())
+
     async def get_with_rules(self, recommendation_id: int) -> BidRecommendation | None:
         result = await self.session.execute(
             select(BidRecommendation)

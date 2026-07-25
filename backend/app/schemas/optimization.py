@@ -100,3 +100,27 @@ class RecommendationListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class ExportSkippedRoute(BaseModel):
+    """A route that could not be written to the workbook (recorded, not fatal)."""
+
+    origin: str
+    destination: str
+    reason: str
+
+
+class ExportSummary(BaseModel):
+    """Summary of an Excel export: what changed and by how much."""
+
+    output_filename: str
+    routes_processed: int
+    routes_updated: int
+    routes_unchanged: int
+    manual_review_count: int
+    insufficient_data_count: int
+    average_bid_increase: float
+    maximum_bid_increase: float
+    skipped_routes: list[ExportSkippedRoute] = Field(default_factory=list)
+    strategy_version: str
+    timestamp: datetime

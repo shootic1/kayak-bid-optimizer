@@ -21,6 +21,10 @@ holds the algorithms.
   (matched / no-history / non-IATA / excluded).
 - **`metrics.py`** — the `RouteMetrics` value object passed into the engine.
 - **`bid_file_parser.py`** — parses uploaded KAYAK bid-file worksheets.
+- **`excel_export.py`** — rewrites a bid workbook's Override CPC column in place
+  from a set of updates, preserving every other cell, style, formula, sheet, and
+  piece of metadata. It only applies decisions; `ExportService` decides which
+  routes get a new bid (INCREASE only).
 
 ## Determinism
 
