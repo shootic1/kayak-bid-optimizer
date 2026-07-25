@@ -26,8 +26,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-kayak}:${POSTGRES_PASSWORD:-kayak}@db:5432/${POSTGRES_DB:-kayak_bid_optimizer}

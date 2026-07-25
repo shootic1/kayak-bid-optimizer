@@ -21,10 +21,10 @@ ENV UV_COMPILE_BYTECODE=1 \
 # builds on Railway/Render's builder as well as locally. UV_NO_CACHE keeps the
 # image lean since a persistent uv cache is not available without a cache mount.
 ENV UV_NO_CACHE=1
-COPY pyproject.toml uv.lock ./
+COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev
 # Then install the project itself.
-COPY . .
+COPY backend/ .
 RUN uv sync --frozen --no-dev
 
 # ---- Runner: minimal runtime as a non-root user ---------------------------

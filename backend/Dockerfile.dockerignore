@@ -1,0 +1,21 @@
+# Ignore file for backend/Dockerfile when the build context is the MONOREPO ROOT
+# (Railway/Render, and local `docker build -f backend/Dockerfile .`).
+#
+# BuildKit prefers "<dockerfile>.dockerignore" over the context-root
+# ".dockerignore", so this scopes the backend image's context to the backend/
+# project without disturbing the root .dockerignore used by the frontend build.
+#
+# Patterns are relative to the build context (repo root): ignore everything,
+# then re-include only the backend project, then prune backend build junk.
+
+*
+!backend
+
+backend/.venv
+backend/**/__pycache__
+backend/.pytest_cache
+backend/.ruff_cache
+backend/.mypy_cache
+backend/tests
+backend/.dockerignore
+backend/migrations/versions/*.py
