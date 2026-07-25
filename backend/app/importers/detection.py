@@ -1,45 +1,74 @@
 """KAYAK report detection and column validation.
 
-Given the parsed headers and the original filename, detect the report variant
-(Inline vs Dynamic Inline), resolve the device segment (Desktop vs Mobile), map
-the report's actual headers onto canonical fields, and validate that all required
-columns are present — returning detailed, actionable errors when they are not.
+Maps a report's actual headers onto canonical fields, detects the report variant
+(Inline vs Dynamic Inline) and device segment, derives the report date from the
+filename, and validates that the genuinely-required columns are present.
+
+The alias map reflects the **real** KAYAK flight report structure:
+
+Inline report columns:
+    Placement, Origin, Destination, Advertiser Origin, Advertiser Destination,
+    Average CPC (USD), Average Rank, First/Second/Third Rank Bid (USD) N% Share,
+    Est. Clicks, Est. Impressions, Est. Spend (USD)
+
+Dynamic Inline report columns:
+    Placement, Origin, Destination, Advertiser Origin, Advertiser Destination,
+    Average CPC (USD), Average Inline Ad Rank, Average Overall Position,
+    Nth Overall Position Bid (USD), Bid To Be First Inline Ad,
+    Est. Clicks, Est. Impressions, Est. Spend (USD)
+
+Real reports have no Date, Device, or Bookings columns: the date comes from the
+filename, device defaults to ``ALL``, and bookings is stored as ``NULL``.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import date, datetime
 
 from app.domain.enums import DeviceType, ReportType
 
 # Canonical field -> accepted header aliases (matched case/punctuation-insensitively).
+# The first alias that matches wins, so preferred headers are listed first.
 COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
-    "report_date": ("date", "report date", "day"),
-    "origin": ("origin", "origin airport", "from", "orig", "departure"),
-    "destination": ("destination", "destination airport", "to", "dest", "arrival"),
-    "device": ("device", "device type", "platform"),
-    "impressions": ("impressions", "impr", "imps"),
-    "clicks": ("clicks", "click"),
+    "origin": ("origin",),
+    "destination": ("destination",),
+    # "Est. Clicks" -> normalized "est clicks"; legacy aliases retained.
+    "clicks": ("est clicks", "clicks", "click"),
+    "impressions": ("est impressions", "impressions", "impr", "imps"),
+    "spend": ("est spend usd", "est spend", "spend", "cost", "total spend"),
+    "avg_cpc": ("average cpc usd", "average cpc", "avg cpc", "cpc"),
+    # Dynamic reports expose "Average Overall Position" (preferred); inline uses
+    # "Average Rank".
+    "avg_position": (
+        "average overall position",
+        "average rank",
+        "average inline ad rank",
+        "average position",
+        "avg position",
+        "position",
+        "avg pos",
+    ),
+    # Optional in real reports (absent -> NULL / derived).
     "ctr": ("ctr", "click through rate"),
-    "avg_cpc": ("avg cpc", "average cpc", "cpc"),
-    "spend": ("spend", "cost", "total spend"),
     "bookings": ("bookings", "conversions", "conv", "booking"),
-    "avg_position": ("avg position", "average position", "position", "avg pos"),
+    "device": ("device", "device type", "platform"),
+    "report_date": ("date", "report date", "day"),
 }
 
-# Fields a valid KAYAK performance report must contain.
+# Only columns present in every real KAYAK report are enforced. Date comes from
+# the filename, device defaults to ALL, bookings/ctr are optional.
 REQUIRED_FIELDS: tuple[str, ...] = (
-    "report_date",
     "origin",
     "destination",
     "impressions",
     "clicks",
     "spend",
-    "bookings",
 )
 
 _NORMALIZE_RE = re.compile(r"[^a-z0-9]+")
+_DATE_IN_NAME_RE = re.compile(r"\d{8}")
 
 
 def _normalize_header(header: str) -> str:
@@ -53,6 +82,7 @@ class DetectionResult:
 
     report_type: ReportType
     report_device: DeviceType
+    report_date: date | None = None
     column_map: dict[str, str] = field(default_factory=dict)
     device_column: str | None = None
     missing_columns: list[str] = field(default_factory=list)
@@ -69,10 +99,24 @@ def _detect_report_type(headers: list[str], filename: str) -> ReportType:
 
 
 def _detect_report_device(filename: str) -> DeviceType:
+    """Real flight reports are not device-segmented -> ALL. Filename hints win."""
     name = filename.lower()
-    if any(token in name for token in ("mobile", "mob", "phone")):
+    if any(token in name for token in ("mobile", "phone")):
         return DeviceType.MOBILE
-    return DeviceType.DESKTOP
+    if "desktop" in name:
+        return DeviceType.DESKTOP
+    return DeviceType.ALL
+
+
+def _detect_report_date(filename: str) -> date | None:
+    """Parse a ``YYYYMMDD`` token from the filename (e.g. ``..._20260723.tsv``)."""
+    parsed: date | None = None
+    for token in _DATE_IN_NAME_RE.findall(filename):
+        try:
+            parsed = datetime.strptime(token, "%Y%m%d").date()
+        except ValueError:
+            continue
+    return parsed
 
 
 def detect_report(headers: list[str], original_filename: str) -> DetectionResult:
@@ -96,6 +140,7 @@ def detect_report(headers: list[str], original_filename: str) -> DetectionResult
     return DetectionResult(
         report_type=_detect_report_type(headers, original_filename),
         report_device=_detect_report_device(original_filename),
+        report_date=_detect_report_date(original_filename),
         column_map=column_map,
         device_column=column_map.get("device"),
         missing_columns=missing,

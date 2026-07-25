@@ -1,4 +1,4 @@
-"""Parser tests for Excel, CSV, and TSV."""
+"""Parser tests for Excel, CSV, and TSV (real KAYAK structure)."""
 
 from __future__ import annotations
 
@@ -20,35 +20,36 @@ def test_factory_returns_correct_parser() -> None:
     assert isinstance(get_parser(FileType.TSV), TsvParser)
 
 
-def test_csv_parser_reads_headers_and_rows(tmp_path: Path) -> None:
-    path = tmp_path / "report.csv"
-    path.write_bytes(samples.csv_bytes())
-
-    table = CsvParser().parse(path)
-
-    assert table.headers == samples.HEADERS
-    assert len(table.rows) == len(samples.ROWS)
-    assert table.rows[0]["Origin"] == "JFK"
-
-
-def test_tsv_parser_reads_rows(tmp_path: Path) -> None:
-    path = tmp_path / "report.tsv"
-    path.write_bytes(samples.tsv_bytes())
+def test_tsv_parser_reads_real_inline_headers_and_rows(tmp_path: Path) -> None:
+    path = tmp_path / "inline.tsv"
+    path.write_bytes(samples.inline_tsv_bytes())
 
     table = TsvParser().parse(path)
 
-    assert table.headers == samples.HEADERS
+    assert table.headers == samples.INLINE_HEADERS
+    assert len(table.rows) == len(samples.INLINE_ROWS)
+    assert table.rows[0]["Origin"] == "JFK"
+    assert table.rows[0]["Est. Impressions"] == "1000"
+
+
+def test_csv_parser_reads_legacy_rows(tmp_path: Path) -> None:
+    path = tmp_path / "legacy.csv"
+    path.write_bytes(samples.legacy_csv_bytes())
+
+    table = CsvParser().parse(path)
+
+    assert table.headers == samples.LEGACY_HEADERS
     assert table.rows[1]["Destination"] == "SFO"
 
 
-def test_excel_parser_reads_rows(tmp_path: Path) -> None:
-    path = tmp_path / "report.xlsx"
-    path.write_bytes(samples.xlsx_bytes())
+def test_excel_parser_reads_real_inline_rows(tmp_path: Path) -> None:
+    path = tmp_path / "inline.xlsx"
+    path.write_bytes(samples.inline_xlsx_bytes())
 
     table = ExcelParser().parse(path)
 
-    assert table.headers == samples.HEADERS
-    assert table.rows[0]["Origin"] == "JFK"
+    assert table.headers == samples.INLINE_HEADERS
+    assert table.rows[0]["Destination"] == "LAX"
 
 
 def test_excel_parser_rejects_non_excel(tmp_path: Path) -> None:

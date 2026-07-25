@@ -34,8 +34,14 @@ class ReportType(StrEnum):
 
 
 class DeviceType(StrEnum):
-    """Device segment of a performance row."""
+    """Device segment of a performance row.
 
+    Real KAYAK flight reports are not device-segmented, so ``ALL`` is used when a
+    report has no device column. ``DESKTOP``/``MOBILE`` remain supported for
+    reports (or future exports) that do segment by device.
+    """
+
+    ALL = "all"
     DESKTOP = "desktop"
     MOBILE = "mobile"
 

@@ -53,7 +53,8 @@ class PerformanceReport(Base):
     ctr: Mapped[float | None] = mapped_column(_Rate, nullable=True)
     avg_cpc: Mapped[float | None] = mapped_column(_Money, nullable=True)
     spend: Mapped[float] = mapped_column(_Money, nullable=False, default=0)
-    bookings: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Nullable: real KAYAK reports have no bookings column (store NULL, not 0).
+    bookings: Mapped[int | None] = mapped_column(Integer, nullable=True)
     avg_position: Mapped[float | None] = mapped_column(_Rate, nullable=True)
 
     upload: Mapped[Upload] = relationship(back_populates="reports")

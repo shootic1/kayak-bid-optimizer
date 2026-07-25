@@ -8,7 +8,7 @@ detected so callers can skip them without recording an error.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
 
 from app.domain.enums import DeviceType, ReportType
 from app.importers.detection import DetectionResult
@@ -49,7 +49,7 @@ class NormalizedRow:
     ctr: float | None
     avg_cpc: float | None
     spend: float
-    bookings: int
+    bookings: int | None
     avg_position: float | None
 
 
@@ -93,13 +93,16 @@ def map_row(row: dict[str, object], detection: DetectionResult) -> NormalizedRow
 
     origin = required("origin", normalize_airport_code)
     destination = required("destination", normalize_airport_code)
-    report_date = required("report_date", normalize_date)
     impressions = required("impressions", normalize_int)
     clicks = required("clicks", normalize_int)
     spend = required("spend", normalize_currency)
-    bookings = required("bookings", normalize_int)
 
-    # Device: from the per-row column when present/valid, else the report default.
+    # Report date is file-level (from the filename); a per-row Date column, when
+    # present, takes precedence.
+    report_date = _resolve_report_date(row, detection)
+
+    # Device: per-row column when present/valid, else the report default (ALL for
+    # non-segmented reports).
     device = detection.report_device
     if detection.device_column is not None:
         raw_device = row.get(detection.device_column)
@@ -109,7 +112,7 @@ def map_row(row: dict[str, object], detection: DetectionResult) -> NormalizedRow
             except ValueError:
                 device = detection.report_device
 
-    # Optional metrics: use the column when present, else derive.
+    # Optional metrics: use the column when present, else derive (or NULL).
     ctr = _optional_or_derive(
         row, column_map, "ctr", normalize_percentage, _safe_ratio(clicks, impressions)
     )
@@ -117,10 +120,11 @@ def map_row(row: dict[str, object], detection: DetectionResult) -> NormalizedRow
         row, column_map, "avg_cpc", normalize_currency, _safe_ratio(spend, clicks)
     )
     avg_position = _optional_or_derive(row, column_map, "avg_position", normalize_float, None)
+    bookings = _optional_int(row, column_map, "bookings")
 
     return NormalizedRow(
         report_type=detection.report_type,
-        report_date=report_date,  # type: ignore[arg-type]
+        report_date=report_date,
         origin=origin,  # type: ignore[arg-type]
         destination=destination,  # type: ignore[arg-type]
         device=device,
@@ -129,9 +133,39 @@ def map_row(row: dict[str, object], detection: DetectionResult) -> NormalizedRow
         ctr=ctr,
         avg_cpc=avg_cpc,
         spend=spend,  # type: ignore[arg-type]
-        bookings=bookings,  # type: ignore[arg-type]
+        bookings=bookings,
         avg_position=avg_position,
     )
+
+
+def _resolve_report_date(row: dict[str, object], detection: DetectionResult) -> date:
+    """Resolve the row's report date: per-row column > filename date > today."""
+    header = detection.column_map.get("report_date")
+    if header is not None:
+        value = row.get(header)
+        if not _is_empty(value):
+            try:
+                return normalize_date(value)
+            except ValueError:
+                pass
+    if detection.report_date is not None:
+        return detection.report_date
+    return datetime.now(UTC).date()
+
+
+def _optional_int(
+    row: dict[str, object], column_map: dict[str, str], field_name: str
+) -> int | None:
+    """Return a normalized optional integer metric, or ``None`` when absent."""
+    header = column_map.get(field_name)
+    if header is not None:
+        value = row.get(header)
+        if not _is_empty(value):
+            try:
+                return normalize_int(value)
+            except ValueError:
+                return None
+    return None
 
 
 def _safe_ratio(numerator: object, denominator: object) -> float | None:

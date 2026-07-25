@@ -91,6 +91,8 @@ jobs:
         run: uv run ruff format --check app tests
       - name: Type-check (mypy)
         run: uv run mypy app
+      - name: Migrate test database
+        run: uv run alembic upgrade head
       - name: Test (pytest)
         run: uv run pytest
 
