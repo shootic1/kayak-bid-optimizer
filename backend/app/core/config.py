@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     # Fail fast on the readiness probe instead of hanging on a dead database.
     DB_CONNECT_TIMEOUT_SECONDS: float = 5.0
 
+    # --- File uploads ---------------------------------------------------------
+    # Directory where uploaded source files are stored (mounted volume in prod).
+    UPLOAD_DIR: str = "storage/uploads"
+    # Maximum accepted upload size in bytes (default 25 MiB).
+    MAX_UPLOAD_SIZE_BYTES: int = 25 * 1024 * 1024
+
     # --- Logging --------------------------------------------------------------
     LOG_LEVEL: str = "INFO"
     # ``json`` for production/aggregators, ``console`` for readable local dev.

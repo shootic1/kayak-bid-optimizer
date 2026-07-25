@@ -32,7 +32,12 @@ FROM base AS runner
 WORKDIR /app
 RUN groupadd --system app && useradd --system --gid app --uid 1001 app
 COPY --from=builder --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH"
+# Writable upload storage owned by the non-root user (WORKDIR is root-owned).
+RUN mkdir -p /app/storage/uploads && chown -R app:app /app/storage
+ENV PATH="/app/.venv/bin:$PATH" \
+    UPLOAD_DIR="/app/storage/uploads"
 USER app
 EXPOSE 8000
+# Entrypoint runs `alembic upgrade head` before the server starts.
+ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

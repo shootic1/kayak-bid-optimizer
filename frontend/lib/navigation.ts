@@ -9,6 +9,7 @@ import {
   Settings,
   SlidersHorizontal,
   Table2,
+  Upload,
 } from 'lucide-react';
 
 import { APP_ROUTES } from '@kayak/shared';
@@ -23,6 +24,7 @@ export interface NavItem {
 
 export const PRIMARY_NAV: readonly NavItem[] = [
   { label: 'Dashboard', href: APP_ROUTES.dashboard, icon: LayoutDashboard, implemented: true },
+  { label: 'Uploads', href: APP_ROUTES.uploads, icon: Upload, implemented: true },
   { label: 'Reports', href: APP_ROUTES.reports, icon: Table2, implemented: false },
   {
     label: 'Optimization',

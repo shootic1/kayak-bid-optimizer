@@ -17,6 +17,13 @@ export const API_ENDPOINTS = {
   ready: `${API_BASE_PATH}/health/ready`,
   /** Versioned application version/metadata. */
   version: `${API_V1_PATH}/version`,
+  /** Uploads collection (POST to create, GET to list). */
+  uploads: `${API_V1_PATH}/uploads`,
 } as const;
+
+/** Build the URL path for a single upload. */
+export function uploadPath(id: number): string {
+  return `${API_V1_PATH}/uploads/${id}`;
+}
 
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS];

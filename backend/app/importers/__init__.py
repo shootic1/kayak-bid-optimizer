@@ -1,4 +1,3 @@
-"""RESERVED — architectural preparation; no implementation in Phase 1.
-
-Future adapters that parse KAYAK reports/workbooks into domain objects.
+"""File import subsystem: parsers, KAYAK report detection, normalization, and
+row mapping. Orchestrated by ``app.services.import_service``.
 """

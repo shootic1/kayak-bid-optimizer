@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.routes import version
+from app.api.v1.routes import uploads, version
 
 v1_router = APIRouter()
 v1_router.include_router(version.router)
+v1_router.include_router(uploads.router)

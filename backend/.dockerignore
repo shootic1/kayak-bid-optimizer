@@ -9,4 +9,4 @@ tests/
 *.md
 !README.md
 .git/
-migrations/versions/*.py
+# migrations/versions/*.py are intentionally shipped for `alembic upgrade head`.

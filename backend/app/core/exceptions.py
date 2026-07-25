@@ -58,6 +58,30 @@ class ServiceUnavailableError(AppError):
     message = "A required dependency is currently unavailable."
 
 
+class BadRequestError(AppError):
+    status_code = status.HTTP_400_BAD_REQUEST
+    code = "bad_request"
+    message = "The request could not be processed."
+
+
+class ConflictError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = "conflict"
+    message = "The resource already exists."
+
+
+class UnsupportedMediaTypeError(AppError):
+    status_code = status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
+    code = "unsupported_media_type"
+    message = "The file type is not supported."
+
+
+class PayloadTooLargeError(AppError):
+    status_code = status.HTTP_413_CONTENT_TOO_LARGE
+    code = "payload_too_large"
+    message = "The uploaded file is too large."
+
+
 def _error_body(
     *, code: str, message: str, details: dict[str, Any] | None = None
 ) -> dict[str, Any]:

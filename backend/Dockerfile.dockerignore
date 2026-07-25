@@ -18,4 +18,5 @@ backend/.ruff_cache
 backend/.mypy_cache
 backend/tests
 backend/.dockerignore
-backend/migrations/versions/*.py
+# NOTE: migrations/versions/*.py ARE included so deploys can run
+# `alembic upgrade head`.

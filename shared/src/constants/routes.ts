@@ -2,6 +2,7 @@
 
 export const APP_ROUTES = {
   dashboard: '/',
+  uploads: '/uploads',
   reports: '/reports',
   optimization: '/optimization',
   routes: '/routes',
