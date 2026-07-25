@@ -30,7 +30,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     label: 'Optimization',
     href: APP_ROUTES.optimization,
     icon: SlidersHorizontal,
-    implemented: false,
+    implemented: true,
   },
   { label: 'Routes', href: APP_ROUTES.routes, icon: MapPin, implemented: false },
   { label: 'Airports', href: APP_ROUTES.airports, icon: Plane, implemented: false },

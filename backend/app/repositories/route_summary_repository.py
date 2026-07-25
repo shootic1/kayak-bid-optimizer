@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import SupportsFloat, SupportsInt, cast
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -15,8 +17,61 @@ from app.repositories.base import BaseRepository
 RouteSegment = tuple[str, str, DeviceType]
 
 
+@dataclass(frozen=True)
+class RouteSummaryIndexRow:
+    """A route summary projected for the optimization history index."""
+
+    origin: str
+    destination: str
+    route_summary_id: int
+    ctr: float | None
+    avg_position: float | None
+    spend: float | None
+    clicks: int | None
+    impressions: int | None
+    bookings: int | None
+
+
+def _opt_float(value: object) -> float | None:
+    return None if value is None else float(cast("SupportsFloat", value))
+
+
+def _opt_int(value: object) -> int | None:
+    return None if value is None else int(cast("SupportsInt", value))
+
+
 class RouteSummaryRepository(BaseRepository):
     """Recomputes and upserts per-route aggregate statistics."""
+
+    async def load_index_rows(self) -> list[RouteSummaryIndexRow]:
+        """Load all summaries for building a route-history index (one per summary)."""
+        result = await self.session.execute(
+            select(
+                RouteSummary.origin,
+                RouteSummary.destination,
+                RouteSummary.id,
+                RouteSummary.average_ctr,
+                RouteSummary.average_position,
+                RouteSummary.total_spend,
+                RouteSummary.total_clicks,
+                RouteSummary.total_impressions,
+                RouteSummary.total_bookings,
+            )
+        )
+        return [
+            RouteSummaryIndexRow(
+                origin=str(r[0]),
+                destination=str(r[1]),
+                route_summary_id=int(r[2]),
+                ctr=_opt_float(r[3]),
+                avg_position=_opt_float(r[4]),
+                spend=_opt_float(r[5]),
+                clicks=_opt_int(r[6]),
+                impressions=_opt_int(r[7]),
+                bookings=_opt_int(r[8]),
+            )
+            for r in result.all()
+        ]
 
     async def recompute_segments(self, segments: Iterable[RouteSegment]) -> None:
         """Recompute the summary for each ``(origin, destination, device)`` segment.

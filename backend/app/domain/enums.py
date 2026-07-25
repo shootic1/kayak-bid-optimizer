@@ -52,3 +52,38 @@ EXTENSION_TO_FILE_TYPE: dict[str, FileType] = {
     "csv": FileType.CSV,
     "tsv": FileType.TSV,
 }
+
+
+class MatchStatus(StrEnum):
+    """Outcome of matching a bid-file route to historical performance."""
+
+    MATCHED = "matched"
+    UNMATCHED_NO_HISTORY = "unmatched_no_history"
+    UNMATCHED_NON_IATA = "unmatched_non_iata"
+    SKIPPED_EXCLUDED = "skipped_excluded"
+
+
+class RunStatus(StrEnum):
+    """Lifecycle status of an optimization run."""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class RecommendationAction(StrEnum):
+    """The only actions the deterministic engine may produce."""
+
+    KEEP = "keep"
+    INCREASE = "increase"
+    MANUAL_REVIEW = "manual_review"
+    INSUFFICIENT_DATA = "insufficient_data"
+
+
+class ConfidenceLevel(StrEnum):
+    """Confidence in a recommendation, from data volume."""
+
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"

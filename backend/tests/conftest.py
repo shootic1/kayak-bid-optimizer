@@ -21,7 +21,16 @@ from app.core.config import settings
 from app.database.session import dispose_engine, get_session_factory
 from app.main import app
 
-_TABLES = ("performance_reports", "uploads", "route_summaries")
+_TABLES = (
+    "rule_results",
+    "bid_recommendations",
+    "optimization_runs",
+    "bid_file_routes",
+    "bid_files",
+    "performance_reports",
+    "uploads",
+    "route_summaries",
+)
 
 
 @pytest.fixture(scope="session", autouse=True)

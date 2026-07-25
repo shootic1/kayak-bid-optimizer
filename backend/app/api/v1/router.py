@@ -8,8 +8,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.routes import uploads, version
+from app.api.v1.routes import bid_files, optimization, recommendations, uploads, version
 
 v1_router = APIRouter()
 v1_router.include_router(version.router)
 v1_router.include_router(uploads.router)
+v1_router.include_router(bid_files.router)
+v1_router.include_router(optimization.router)
+v1_router.include_router(recommendations.router)
