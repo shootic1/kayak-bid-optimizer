@@ -39,6 +39,16 @@ export function optimizationRunPath(id: number): string {
   return `${API_V1_PATH}/optimization/runs/${id}`;
 }
 
+/** Build the URL path to download a run's optimized workbook. */
+export function optimizationRunExportPath(id: number): string {
+  return `${API_V1_PATH}/optimization/runs/${id}/export`;
+}
+
+/** Build the URL path for a run's export summary (JSON). */
+export function optimizationRunExportSummaryPath(id: number): string {
+  return `${API_V1_PATH}/optimization/runs/${id}/export/summary`;
+}
+
 /** Build the URL path for a single recommendation. */
 export function recommendationPath(id: number): string {
   return `${API_V1_PATH}/recommendations/${id}`;

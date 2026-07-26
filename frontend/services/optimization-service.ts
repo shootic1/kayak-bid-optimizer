@@ -6,9 +6,13 @@ import {
   type BidFileListResponse,
   bidFileListResponseSchema,
   bidFileSchema,
+  type ExportSummary,
+  exportSummarySchema,
   type MatchStatus,
   type OptimizationRun,
   type OptimizationRunListResponse,
+  optimizationRunExportPath,
+  optimizationRunExportSummaryPath,
   optimizationRunListResponseSchema,
   optimizationRunPath,
   optimizationRunSchema,
@@ -86,6 +90,48 @@ export async function uploadBidFile(file: File): Promise<ApiResult<BidFile>> {
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : 'Network error' };
   }
+}
+
+/** Fetch a run's export summary (route counts, bid deltas, strategy version). */
+export function getExportSummary(
+  runId: number,
+  signal?: AbortSignal,
+): Promise<ApiResult<ExportSummary>> {
+  return apiGet(optimizationRunExportSummaryPath(runId), exportSummarySchema, { signal });
+}
+
+/** Download a run's optimized workbook as a blob, with its server-provided filename. */
+export async function downloadExportWorkbook(
+  runId: number,
+): Promise<ApiResult<{ blob: Blob; filename: string }>> {
+  try {
+    const response = await fetch(`${env.apiOrigin}${optimizationRunExportPath(runId)}`, {
+      method: 'GET',
+    });
+    if (!response.ok) {
+      let message = `Request failed with status ${response.status}`;
+      try {
+        message = extractError(await response.json(), response.status);
+      } catch {
+        // non-JSON error body; keep the status-based message
+      }
+      return { ok: false, error: message };
+    }
+    const blob = await response.blob();
+    const filename =
+      filenameFromContentDisposition(response.headers.get('content-disposition')) ??
+      `optimization-run-${runId}_Optimized.xlsx`;
+    return { ok: true, data: { blob, filename } };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Network error' };
+  }
+}
+
+function filenameFromContentDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  const raw = match?.[1];
+  return raw ? decodeURIComponent(raw) : null;
 }
 
 export async function startRun(bidFileId: number): Promise<ApiResult<OptimizationRun>> {

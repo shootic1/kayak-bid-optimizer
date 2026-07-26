@@ -34,7 +34,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   },
   { label: 'Routes', href: APP_ROUTES.routes, icon: MapPin, implemented: false },
   { label: 'Airports', href: APP_ROUTES.airports, icon: Plane, implemented: false },
-  { label: 'Exports', href: APP_ROUTES.exports, icon: ArrowUpFromLine, implemented: false },
+  { label: 'Exports', href: APP_ROUTES.exports, icon: ArrowUpFromLine, implemented: true },
 ] as const;
 
 export const SECONDARY_NAV: readonly NavItem[] = [

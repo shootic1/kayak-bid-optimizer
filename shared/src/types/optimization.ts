@@ -7,6 +7,8 @@ import type {
   bidFileSchema,
   confidenceLevelSchema,
   deviceTypeSchema,
+  exportSkippedRouteSchema,
+  exportSummarySchema,
   matchStatusSchema,
   optimizationRunListResponseSchema,
   optimizationRunSchema,
@@ -31,3 +33,5 @@ export type RuleResult = z.infer<typeof ruleResultSchema>;
 export type Recommendation = z.infer<typeof recommendationSchema>;
 export type RecommendationDetail = z.infer<typeof recommendationDetailSchema>;
 export type RecommendationListResponse = z.infer<typeof recommendationListResponseSchema>;
+export type ExportSkippedRoute = z.infer<typeof exportSkippedRouteSchema>;
+export type ExportSummary = z.infer<typeof exportSummarySchema>;

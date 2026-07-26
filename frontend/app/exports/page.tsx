@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/shared/coming-soon';
+import { ExportsView } from '@/features/optimization/exports-view';
 
 export const metadata: Metadata = { title: 'Exports' };
 
 export default function ExportsPage(): React.JSX.Element {
-  return <ComingSoon title="Exports" />;
+  return <ExportsView />;
 }

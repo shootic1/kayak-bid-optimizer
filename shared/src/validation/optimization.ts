@@ -108,3 +108,23 @@ export const recommendationListResponseSchema = z.object({
   limit: z.number(),
   offset: z.number(),
 });
+
+export const exportSkippedRouteSchema = z.object({
+  origin: z.string(),
+  destination: z.string(),
+  reason: z.string(),
+});
+
+export const exportSummarySchema = z.object({
+  output_filename: z.string(),
+  routes_processed: z.number(),
+  routes_updated: z.number(),
+  routes_unchanged: z.number(),
+  manual_review_count: z.number(),
+  insufficient_data_count: z.number(),
+  average_bid_increase: z.number(),
+  maximum_bid_increase: z.number(),
+  skipped_routes: z.array(exportSkippedRouteSchema),
+  strategy_version: z.string(),
+  timestamp: z.string(),
+});
