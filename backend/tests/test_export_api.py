@@ -8,12 +8,14 @@ outcome and that the export summary is accurate.
 from __future__ import annotations
 
 from io import BytesIO
+from pathlib import Path
 
 from httpx import AsyncClient
 from openpyxl import load_workbook
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests import bid_samples
 
+from app.core.config import settings
 from app.domain.enums import DeviceType
 from app.models.route_summary import RouteSummary
 
@@ -114,6 +116,31 @@ async def test_export_downloads_optimized_workbook(
     assert sheet["E3"].value == "1.40"  # JFK-SFO KEEP -> untouched (original string)
     assert sheet["E4"].value == "2.20"  # MIA-JFK MANUAL_REVIEW -> untouched
     assert sheet["E5"].value == "1.50"  # ABE-AUA INSUFFICIENT_DATA -> untouched
+
+
+async def test_export_survives_ephemeral_disk_wipe(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Export must work from the DB-stored bytes even if the on-disk file is gone.
+
+    Reproduces the production failure: Railway's local disk is wiped on redeploy,
+    so the uploaded workbook vanishes while the run survives in Postgres.
+    """
+    run_id = await _run(client, db_session)
+
+    # Simulate the container restart wiping UPLOAD_DIR.
+    for stored in Path(settings.UPLOAD_DIR).glob("*.xlsx"):
+        stored.unlink()
+
+    summary = await client.get(f"/api/v1/optimization/runs/{run_id}/export/summary")
+    assert summary.status_code == 200
+    assert summary.json()["routes_updated"] == 1
+
+    download = await client.get(f"/api/v1/optimization/runs/{run_id}/export")
+    assert download.status_code == 200
+    assert download.headers["content-type"] == _XLSX
+    sheet = load_workbook(BytesIO(download.content))["Search Terms"]
+    assert float(sheet["E2"].value) == 1.73  # JFK-LAX INCREASE still applied
 
 
 async def test_export_is_deterministic(client: AsyncClient, db_session: AsyncSession) -> None:

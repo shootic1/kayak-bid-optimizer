@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     UniqueConstraint,
@@ -37,6 +38,10 @@ class BidFile(Base):
     file_type: Mapped[FileType] = mapped_column(file_type_enum, nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, nullable=False)
     route_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # The raw uploaded workbook bytes, kept so exports survive container restarts
+    # (the local UPLOAD_DIR is ephemeral on Railway). Deferred: never loaded by
+    # normal list/get queries — only when explicitly accessed for an export.
+    content: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

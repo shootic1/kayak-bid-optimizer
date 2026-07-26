@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import undefer
 
 from app.models.bid_file import BidFile, BidFileRoute
 from app.repositories.base import BaseRepository
@@ -20,6 +21,17 @@ class BidFileRepository(BaseRepository):
 
     async def get(self, bid_file_id: int) -> BidFile | None:
         return await self.session.get(BidFile, bid_file_id)
+
+    async def get_with_content(self, bid_file_id: int) -> BidFile | None:
+        """Load a bid file with its deferred ``content`` eagerly (for export).
+
+        The blob is deferred so normal queries stay lean; export needs the bytes,
+        and eager loading avoids an async lazy-load (which SQLAlchemy forbids).
+        """
+        result = await self.session.execute(
+            select(BidFile).where(BidFile.id == bid_file_id).options(undefer(BidFile.content))
+        )
+        return result.scalar_one_or_none()
 
     async def get_by_checksum(self, checksum: str) -> BidFile | None:
         result = await self.session.execute(select(BidFile).where(BidFile.checksum == checksum))

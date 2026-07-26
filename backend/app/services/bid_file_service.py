@@ -63,6 +63,8 @@ class BidFileService:
             file_type=file_type,
             file_size=len(data),
             route_count=len(parsed.routes),
+            # Persist the raw bytes so exports survive an ephemeral-disk restart.
+            content=data,
         )
         await self._files.add(bid_file)
 

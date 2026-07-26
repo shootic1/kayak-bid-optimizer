@@ -58,11 +58,16 @@ class ExportService:
         if run is None:
             raise NotFoundError(f"optimization run {run_id} not found")
 
-        bid_file = await self._files.get(run.bid_file_id)
+        bid_file = await self._files.get_with_content(run.bid_file_id)
         if bid_file is None:  # defensive: FK guarantees this normally
             raise NotFoundError(f"bid file {run.bid_file_id} not found")
 
-        source = self._read_source(bid_file.stored_filename)
+        # Prefer the bytes persisted in the database; they survive the ephemeral
+        # local disk being wiped on a container restart. Fall back to the on-disk
+        # copy for rows uploaded before durable storage existed.
+        source = bid_file.content
+        if source is None:
+            source = self._read_source(bid_file.stored_filename)
         recommendations = await self._recs.list_for_run(run_id)
 
         limits = DEFAULT_CONFIG.limits_for(device_for_provider(bid_file.provider_code))
