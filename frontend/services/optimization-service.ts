@@ -92,12 +92,29 @@ export async function uploadBidFile(file: File): Promise<ApiResult<BidFile>> {
   }
 }
 
-/** Fetch a run's export summary (route counts, bid deltas, strategy version). */
-export function getExportSummary(
-  runId: number,
-  signal?: AbortSignal,
-): Promise<ApiResult<ExportSummary>> {
-  return apiGet(optimizationRunExportSummaryPath(runId), exportSummarySchema, { signal });
+/** Fetch a run's export summary (route counts, bid deltas, strategy version).
+ *
+ * Uses a direct fetch (not `apiGet`) so the backend's error message is surfaced
+ * — e.g. an export whose original workbook is unavailable returns a specific
+ * 404 that is far clearer than a generic "Request failed with status 404".
+ */
+export async function getExportSummary(runId: number): Promise<ApiResult<ExportSummary>> {
+  try {
+    const response = await fetch(`${env.apiOrigin}${optimizationRunExportSummaryPath(runId)}`, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+    const body: unknown = await response.json();
+    if (!response.ok) {
+      return { ok: false, error: extractError(body, response.status) };
+    }
+    const parsed = exportSummarySchema.safeParse(body);
+    return parsed.success
+      ? { ok: true, data: parsed.data }
+      : { ok: false, error: 'Unexpected response shape' };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Network error' };
+  }
 }
 
 /** Download a run's optimized workbook as a blob, with its server-provided filename. */
